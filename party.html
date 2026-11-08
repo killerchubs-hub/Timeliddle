@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TimeLine Party</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+</head>
+<body class="scanlines flex flex-col h-[100dvh] overflow-hidden">
+  
+  <header class="border-b border-slate-800 p-4 bg-[#0b0f19]/90 z-40">
+    <div class="max-w-md mx-auto flex justify-between items-center">
+      <button onclick="window.location.href='index.html'" class="w-10 h-10 bg-slate-900 border border-slate-700/80 rounded-xl flex items-center justify-center text-slate-300 font-bold">←</button>
+      <div id="roomCodeDisplay" class="text-xs font-bold tracking-widest text-cyan-400 bg-cyan-500/10 px-3 py-1 rounded-xl border border-cyan-500/30">ROOM: ----</div>
+    </div>
+  </header>
+
+  <!-- Lobby Screen -->
+  <div id="lobbyScreen" class="flex-1 max-w-md w-full mx-auto p-6 flex flex-col justify-center items-center gap-6 relative z-10">
+    <h2 class="text-3xl font-black text-white">Party Mode</h2>
+    <button id="hostBtn" class="w-full py-4 bg-cyan-500 text-slate-950 font-black uppercase tracking-wider text-xs rounded-2xl shadow-lg">Host Game</button>
+    <div class="flex w-full gap-2">
+      <input type="text" id="joinCode" placeholder="Enter Room Code" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 text-center text-cyan-400 font-black uppercase mono tracking-widest outline-none focus:border-cyan-500">
+      <button id="joinBtn" class="py-4 px-6 bg-slate-800 text-cyan-400 font-black uppercase text-xs rounded-xl border border-slate-700 hover:border-cyan-400 transition-all">Join</button>
+    </div>
+  </div>
+
+  <!-- Vertical Game Screen -->
+  <main id="gameScreen" class="hidden flex-1 max-w-md w-full mx-auto p-4 flex gap-4 relative z-10">
+    
+    <!-- Vertical Track (0 BC to 2026 AD) -->
+    <div class="w-16 h-full bg-slate-900/80 border border-slate-800 rounded-full flex flex-col justify-between items-center py-4 relative shadow-inner">
+      <span class="mono text-[10px] font-bold text-slate-500">2026</span>
+      <div class="flex-1 w-1 bg-slate-800 my-2 rounded-full relative">
+        <!-- Locked events appear here as glowing dots -->
+      </div>
+      <span class="mono text-[10px] font-bold text-slate-500">0 BC</span>
+    </div>
+
+    <!-- Active Gameplay Area -->
+    <div class="flex-1 flex flex-col justify-center gap-6">
+      <div id="activeEventCard" class="bg-[#1e293b] border border-cyan-500/50 p-6 rounded-2xl shadow-lg glow-cyan text-center hidden">
+        <div id="partyEmoji" class="text-4xl mb-2">❓</div>
+        <div id="partyEventName" class="text-sm font-bold text-white mb-4">Waiting for turn...</div>
+        <div id="yearSliderDisplay" class="text-3xl mono font-black text-cyan-400">1000 AD</div>
+        <!-- Native range slider used as a reliable fallback for mobile precision dragging -->
+        <input type="range" id="partyYearSlider" min="0" max="2026" value="1000" class="w-full mt-4 accent-cyan-400">
+      </div>
+      <button id="lockPartyBtn" class="w-full py-4 bg-cyan-500 text-slate-950 font-black uppercase tracking-wider text-xs rounded-2xl hidden">Lock Guess</button>
+    </div>
+
+  </main>
+
+  <script src="party.js"></script>
+</body>
+</html>
