@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>TimeLine Archive</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="scanlines flex flex-col min-h-screen">
+  
+  <header class="border-b border-slate-800 p-4 bg-[#0b0f19]/90 z-40">
+    <div class="max-w-md mx-auto flex justify-between items-center">
+      <button onclick="window.location.href='index.html'" class="w-10 h-10 bg-slate-900 border border-slate-700/80 rounded-xl flex items-center justify-center text-slate-300 font-bold">
+        ←
+      </button>
+      <h1 class="text-base font-bold tracking-widest text-amber-400">THE VAULT</h1>
+      <div class="w-10"></div> <!-- Spacer -->
+    </div>
+  </header>
+
+  <main class="flex-1 max-w-md w-full mx-auto p-4 relative z-10">
+    <div class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-4">Past Daily Dives</div>
+    <div id="archiveGrid" class="grid grid-cols-4 gap-3">
+      <!-- Generated via JS -->
+    </div>
+  </main>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      fetch('data.json')
+        .then(response => response.json())
+        .then(data => {
+          const grid = document.getElementById('archiveGrid');
+          // Calculate current day of the year
+          const start = new Date(new Date().getFullYear(), 0, 0);
+          const currentDay = Math.floor((new Date() - start) / (1000 * 60 * 60 * 24));
+          
+          data.daily.forEach(puzzle => {
+            if (puzzle.day <= currentDay) {
+              const btn = document.createElement('button');
+              btn.className = "aspect-square bg-slate-900 border border-slate-800 hover:border-amber-500/50 rounded-xl flex items-center justify-center text-amber-400 font-black mono text-lg shadow-sm";
+              btn.innerText = puzzle.day;
+              // In a full build, this would pass the day ID via URL parameter (e.g., index.html?day=1)
+              btn.onclick = () => window.location.href = `index.html`;
+              grid.appendChild(btn);
+            }
+          });
+        });
+    });
+  </script>
+</body>
+</html>
