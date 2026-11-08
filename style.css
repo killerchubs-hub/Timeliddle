@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700;900&family=JetBrains+Mono:wght@700&display=swap');
+
+:root {
+  --bg-color: #07090e;
+  --panel-bg: rgba(15, 21, 35, 0.9);
+  --accent-amber: #f59e0b;
+  --accent-cyan: #22d3ee;
+}
+
+body {
+  font-family: 'Space Grotesk', sans-serif;
+  background-color: var(--bg-color);
+  color: #f1f5f9;
+  margin: 0;
+  overflow-x: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* CRT Scanline effect overlay */
+.scanlines::after {
+  content: " ";
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+              linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+  background-size: 100% 4px, 6px 100%;
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* Uniform Card & Slot Sizing */
+.game-card, .game-slot {
+  height: 60px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  transition: all 0.2s ease;
+}
+
+.game-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  cursor: grab;
+}
+
+.game-card:active {
+  cursor: grabbing;
+  transform: scale(0.98);
+}
+
+.glow-amber {
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);
+}
+
+/* Ad Space Container */
+.ad-banner-container {
+  width: 100%;
+  max-width: 320px;
+  height: 50px;
+  margin: 0 auto;
+  background: #0f172a;
+  border: 1px dashed #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #475569;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-radius: 8px;
+}
