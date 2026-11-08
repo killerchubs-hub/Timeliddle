@@ -1,0 +1,32 @@
+{
+  "daily": [
+    {
+      "day": 1,
+      "items": [
+        { "id": 1, "name": "Oxford University Founded", "year": 1096, "emoji": "🏰" },
+        { "id": 2, "name": "Sinking of the Titanic", "year": 1912, "emoji": "🚢" },
+        { "id": 3, "name": "Release of 'Shrek'", "year": 2001, "emoji": "🎬" },
+        { "id": 4, "name": "First iPhone Released", "year": 2007, "emoji": "📱" },
+        { "id": 5, "name": "Fall of the Berlin Wall", "year": 1989, "emoji": "🧱" }
+      ],
+      "yearLock": { "name": "Completion of the Panama Canal", "year": 1914 }
+    },
+    {
+      "day": 2,
+      "items": [
+        { "id": 6, "name": "Invention of Sliced Bread", "year": 1928, "emoji": "🍞" },
+        { "id": 7, "name": "First McDonald's Opened", "year": 1940, "emoji": "🍔" },
+        { "id": 8, "name": "First Moon Landing", "year": 1969, "emoji": "🌕" },
+        { "id": 9, "name": "Eruption of Mount Vesuvius", "year": 79, "emoji": "🌋" },
+        { "id": 10, "name": "Launch of YouTube", "year": 2005, "emoji": "▶️" }
+      ],
+      "yearLock": { "name": "First Twitter Post", "year": 2006 }
+    }
+  ],
+  "party": [
+    { "id": 101, "name": "Construction of the Great Pyramid", "year": -2560, "emoji": "🔺" },
+    { "id": 102, "name": "Assassination of Julius Caesar", "year": -44, "emoji": "🗡️" },
+    { "id": 103, "name": "First modern Olympic Games", "year": 1896, "emoji": "🏅" },
+    { "id": 104, "name": "Release of Pac-Man", "year": 1980, "emoji": "👾" }
+  ]
+}
