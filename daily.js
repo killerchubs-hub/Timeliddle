@@ -1,145 +1,138 @@
 document.addEventListener("DOMContentLoaded", () => {
   let dailyPuzzle = [];
+  let poolItems = [];
+  let slotItems = [null, null, null, null, null];
+  let selectedId = null;
   let isLocked = false;
   let score = 0;
 
-  // UI Elements
-  const pool = document.getElementById('cardPool');
+  const poolContainer = document.getElementById('cardPool');
   const slotsContainer = document.getElementById('slotContainer');
   const actionBtn = document.getElementById('actionBtn');
   const menuBtn = document.getElementById('menuBtn');
   const closeMenuBtn = document.getElementById('closeMenuBtn');
   const menuModal = document.getElementById('menuModal');
 
-  // Menu Toggles
-  if (menuBtn && menuModal) {
-    menuBtn.addEventListener('click', () => { 
-      menuModal.classList.remove('hidden'); 
-      menuModal.classList.add('flex'); 
-    });
-  }
-  if (closeMenuBtn && menuModal) {
-    closeMenuBtn.addEventListener('click', () => { 
-      menuModal.classList.add('hidden'); 
-      menuModal.classList.remove('flex'); 
-    });
-  }
+  if (menuBtn) menuBtn.addEventListener('click', () => { menuModal.classList.remove('hidden'); menuModal.classList.add('flex'); });
+  if (closeMenuBtn) closeMenuBtn.addEventListener('click', () => { menuModal.classList.add('hidden'); menuModal.classList.remove('flex'); });
 
-  // Fetch Data and Initialize
   fetch('data.json')
     .then(response => response.json())
     .then(data => {
-      // Use calendar day of the year to pick the puzzle (1 to 365)
       const start = new Date(new Date().getFullYear(), 0, 0);
-      const diff = new Date() - start;
-      const oneDay = 1000 * 60 * 60 * 24;
-      const dayOfYear = Math.floor(diff / oneDay);
+      const dayOfYear = Math.floor((new Date() - start) / (1000 * 60 * 60 * 24));
       
       const badge = document.getElementById('dailyNumberBadge');
       if (badge) badge.innerText = `#${dayOfYear}`;
       
-      // Select today's puzzle (fallback to manual generator if JSON runs out)
       const puzzleData = data.daily.find(d => d.day === dayOfYear) || data.daily[0];
-      
-      // Shuffle for the pool
       dailyPuzzle = [...puzzleData.items];
-      const shuffled = [...dailyPuzzle].sort(() => Math.random() - 0.5);
+      poolItems = [...dailyPuzzle].sort(() => Math.random() - 0.5);
       
-      renderBoard(shuffled);
-      initDragAndDrop();
+      renderBoard();
     })
-    .catch(err => console.error("Error loading daily data:", err));
+    .catch(err => console.error("Error loading data:", err));
 
-  function renderBoard(shuffledItems) {
-    pool.innerHTML = '';
+  function renderBoard() {
+    poolContainer.innerHTML = '';
     slotsContainer.innerHTML = '';
 
-    // Render draggable pool cards
-    shuffledItems.forEach(item => {
+    // Render Pool
+    poolItems.forEach(item => {
       const card = document.createElement('div');
-      card.className = "game-card w-full text-xs font-bold text-slate-200";
-      card.dataset.id = item.id;
-      card.innerHTML = `<span class="text-base mr-2">${item.emoji}</span><span class="truncate">${item.name}</span>`;
-      pool.appendChild(card);
+      const isSelected = item.id === selectedId;
+      
+      card.className = `w-full h-14 border rounded-xl flex items-center px-4 transition-all cursor-pointer shadow-sm ${
+        isSelected ? 'bg-slate-700 border-amber-400 ring-2 ring-amber-400 scale-[0.98]' : 'bg-[#1e293b] border-slate-700 hover:border-slate-500'
+      }`;
+      card.innerHTML = `<span class="text-base mr-2">${item.emoji}</span><span class="text-xs font-bold text-slate-200 truncate">${item.name}</span>`;
+      
+      card.onclick = () => {
+        if (isLocked) return;
+        selectedId = isSelected ? null : item.id;
+        renderBoard();
+      };
+      
+      poolContainer.appendChild(card);
     });
 
-    // Render 5 empty drop slots
-    for(let i = 0; i < 5; i++) {
-      const slot = document.createElement('div');
-      slot.className = "game-slot w-full border-2 border-dashed border-slate-800 bg-slate-900/50 flex justify-between relative";
-      slot.dataset.index = i;
-      slot.innerHTML = `<span class="text-slate-600 font-bold uppercase tracking-wider text-[10px] pointer-events-none">Position ${i + 1}</span>`;
-      slotsContainer.appendChild(slot);
+    if (poolItems.length === 0 && !isLocked) {
+      poolContainer.innerHTML = `<span class="text-[10px] text-slate-500 font-bold uppercase mx-auto mt-2">All cards placed</span>`;
     }
-  }
 
-  function initDragAndDrop() {
-    // Sortable JS configuration with aggressive mobile touch fixes applied
-    const sortableConfig = {
-      group: 'shared',
-      animation: 150,
-      delay: 0, // Instant touch response
-      forceFallback: true, // Forces touch dragging on stubborn mobile browsers
-      fallbackClass: 'opacity-80',
-      ghostClass: 'opacity-30',
-      onAdd: checkCompletion,
-      onRemove: checkCompletion
-    };
-
-    Sortable.create(pool, sortableConfig);
-    
-    document.querySelectorAll('.game-slot').forEach(slot => {
-      Sortable.create(slot, {
-        ...sortableConfig,
-        onAdd: (evt) => {
-          // Force exactly 1 card per slot
-          const cards = evt.to.querySelectorAll('.game-card');
-          if (cards.length > 1) {
-            // Send the older card back to where the new card came from
-            evt.from.appendChild(cards[0]);
-          }
-          checkCompletion();
+    // Render Slots
+    slotItems.forEach((item, index) => {
+      const slot = document.createElement('div');
+      
+      if (item) {
+        if (isLocked) {
+          // Locked State
+          const isCorrect = item.id === [...dailyPuzzle].sort((a, b) => a.year - b.year)[index].id;
+          slot.className = `w-full h-14 border rounded-xl flex items-center px-4 justify-between shadow-md ${
+            isCorrect ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-200' : 'bg-rose-950/60 border-rose-500/50 text-rose-200'
+          }`;
+          slot.innerHTML = `
+            <div class="flex items-center truncate">
+              <span class="text-base mr-2">${item.emoji}</span>
+              <span class="text-xs font-bold truncate">${item.name}</span>
+            </div>
+            <span class="ml-2 mono text-[10px] opacity-70 shrink-0">${item.year < 0 ? Math.abs(item.year) + ' BC' : item.year + ' AD'}</span>`;
+        } else {
+          // Filled but Unlocked
+          slot.className = "w-full h-14 bg-[#1e293b] border border-slate-600 rounded-xl flex items-center px-4 cursor-pointer shadow-sm";
+          slot.innerHTML = `<span class="text-base mr-2">${item.emoji}</span><span class="text-xs font-bold text-slate-200 truncate">${item.name}</span>`;
+          slot.onclick = () => {
+            poolItems.push(item);
+            slotItems[index] = null;
+            selectedId = null;
+            renderBoard();
+            checkCompletion();
+          };
         }
-      });
+      } else {
+        // Empty Slot
+        const isHighlight = selectedId !== null;
+        slot.className = `w-full h-14 border-2 border-dashed rounded-xl flex items-center px-4 cursor-pointer transition-all ${
+          isHighlight ? 'border-amber-500/50 bg-amber-500/10' : 'border-slate-800 bg-slate-900/50'
+        }`;
+        slot.innerHTML = `<span class="text-[10px] font-bold uppercase tracking-wider ${isHighlight ? 'text-amber-400' : 'text-slate-600'}">Position ${index + 1}</span>`;
+        
+        slot.onclick = () => {
+          if (selectedId !== null) {
+            const itemToPlace = poolItems.find(i => i.id === selectedId);
+            slotItems[index] = itemToPlace;
+            poolItems = poolItems.filter(i => i.id !== selectedId);
+            selectedId = null;
+            renderBoard();
+            checkCompletion();
+          }
+        };
+      }
+      slotsContainer.appendChild(slot);
     });
   }
 
   function checkCompletion() {
-    if (isLocked) return;
-    const filledSlots = document.querySelectorAll('.game-slot .game-card').length;
-    if (actionBtn) actionBtn.disabled = (filledSlots !== 5);
+    const isFull = slotItems.every(item => item !== null);
+    if (actionBtn) actionBtn.disabled = !isFull;
   }
 
   if (actionBtn) {
     actionBtn.addEventListener('click', () => {
       isLocked = true;
+      selectedId = null; // Clear any selection
       const sortedCorrectly = [...dailyPuzzle].sort((a, b) => a.year - b.year);
-      const slots = document.querySelectorAll('.game-slot');
       
-      slots.forEach((slot, index) => {
-        const card = slot.querySelector('.game-card');
-        if (!card) return;
-        
-        const cardId = parseInt(card.dataset.id);
-        const isCorrect = cardId === sortedCorrectly[index].id;
-        
-        // Update styling based on accuracy
-        card.className = `game-card w-full text-xs font-bold shadow-md ${
-          isCorrect ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-200' : 'bg-rose-950/60 border-rose-500/50 text-rose-200'
-        }`;
-        
-        if (isCorrect) score += 200;
-        
-        // Reveal exact years
-        const itemData = dailyPuzzle.find(i => i.id === cardId);
-        card.innerHTML += `<span class="ml-auto mono text-[10px] opacity-70">${itemData.year < 0 ? Math.abs(itemData.year) + ' BC' : itemData.year + ' AD'}</span>`;
+      slotItems.forEach((item, index) => {
+        if (item && item.id === sortedCorrectly[index].id) score += 200;
       });
+
+      renderBoard(); // Re-render to show locked colors
 
       actionBtn.innerText = `Score: ${score} / 1000`;
       actionBtn.classList.remove('bg-amber-500');
       actionBtn.classList.add('bg-slate-800', 'text-amber-400', 'border', 'border-amber-500/50');
       
-      // Save streak to local storage
       if (score === 1000) {
         let streak = parseInt(localStorage.getItem('timeline_streak') || 0);
         localStorage.setItem('timeline_streak', streak + 1);
@@ -149,7 +142,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Load existing streak on boot
   const savedStreak = localStorage.getItem('timeline_streak') || 0;
   const streakEl = document.getElementById('streakCount');
   if (streakEl) streakEl.innerText = savedStreak;
