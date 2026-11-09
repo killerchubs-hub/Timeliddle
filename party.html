@@ -24,14 +24,15 @@
       <p class="text-xs text-slate-400">Host a room or join a friend.</p>
     </div>
 
-    <!-- Setup Sliders -->
     <div class="bg-slate-900/80 p-5 rounded-3xl border border-slate-800 space-y-6 shadow-xl">
       <div>
         <div class="flex justify-between mb-2">
           <label class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Start Era</label>
           <span id="startDisplay" class="text-xs font-mono font-bold text-cyan-400">0 AD</span>
         </div>
-        <input type="range" id="startYear" min="-5000" max="1800" step="100" value="0" class="w-full h-2 bg-slate-800 rounded-lg appearance-none accent-cyan-400">
+        <input type="range" id="startYear" min="-5000" max="1800" step="10" value="0" 
+               oninput="document.getElementById('startDisplay').innerText = this.value < 0 ? Math.abs(this.value) + ' BC' : this.value + ' AD'"
+               class="w-full h-2 bg-slate-800 rounded-lg appearance-none accent-cyan-400">
       </div>
       
       <div>
@@ -39,7 +40,9 @@
           <label class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">End Era</label>
           <span id="endDisplay" class="text-xs font-mono font-bold text-cyan-400">2026 AD</span>
         </div>
-        <input type="range" id="endYear" min="1800" max="2026" step="1" value="2026" class="w-full h-2 bg-slate-800 rounded-lg appearance-none accent-cyan-400">
+        <input type="range" id="endYear" min="1800" max="2026" step="1" value="2026" 
+               oninput="document.getElementById('endDisplay').innerText = this.value < 0 ? Math.abs(this.value) + ' BC' : this.value + ' AD'"
+               class="w-full h-2 bg-slate-800 rounded-lg appearance-none accent-cyan-400">
       </div>
       
       <button id="hostBtn" class="w-full py-4 bg-cyan-500 text-slate-950 font-black uppercase tracking-wider text-xs rounded-xl shadow-lg glow-cyan active:scale-95">Create Room</button>
@@ -53,28 +56,30 @@
 
   <!-- Game Screen -->
   <main id="gameScreen" class="hidden flex-1 max-w-md w-full mx-auto p-4 flex gap-4 relative z-10 h-full overflow-hidden">
-    
-    <!-- Left Column: Timeline Track -->
-    <div class="w-14 h-full bg-slate-900/80 border border-slate-800 rounded-full flex flex-col justify-between items-center py-6 relative shadow-inner shrink-0">
-      <span id="uiEndYear" class="mono text-[10px] font-bold text-slate-500">2026</span>
+    <!-- Visual Vertical Track -->
+    <div class="w-10 h-full bg-slate-900/80 border border-slate-800 rounded-full flex flex-col justify-between items-center py-6 relative shadow-inner shrink-0">
+      <span id="uiEndYear" class="mono text-[8px] font-bold text-slate-500">2026</span>
       <div class="flex-1 w-1 bg-slate-800 my-2 rounded-full relative"></div>
-      <span id="uiStartYear" class="mono text-[10px] font-bold text-slate-500">0</span>
+      <span id="uiStartYear" class="mono text-[8px] font-bold text-slate-500">0</span>
     </div>
 
-    <!-- Right Column: Touch Drag Area -->
-    <div id="touchArea" class="flex-1 relative h-full pb-20">
-      <!-- The Card (Positioned absolutely so it can slide) -->
-      <div id="activeEventCard" class="absolute top-1/2 left-0 right-0 -translate-y-1/2 bg-[#1e293b] border border-cyan-500/50 p-5 rounded-2xl shadow-lg glow-cyan flex flex-col items-center justify-center w-full z-20 touch-none hidden">
+    <!-- Active Play Area -->
+    <div class="flex-1 flex flex-col justify-center gap-6 h-full pb-10">
+      <div id="activeEventCard" class="bg-[#1e293b] border border-cyan-500/50 p-5 rounded-2xl shadow-lg glow-cyan flex flex-col items-center justify-center w-full hidden">
         <div id="partyEmoji" class="text-4xl mb-2">❓</div>
-        <div id="partyEventName" class="text-sm font-bold text-white mb-3 text-center leading-tight">Waiting for host...</div>
-        <div id="yearSliderDisplay" class="text-2xl mono font-black text-cyan-400 bg-cyan-500/10 px-4 py-1 rounded-xl w-full text-center">--</div>
-        <div class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-3">↕ Drag Screen To Move</div>
+        <div id="partyEventName" class="text-sm font-bold text-white mb-4 text-center leading-tight">Waiting for host...</div>
+        <div id="yearSliderDisplay" class="text-3xl mono font-black text-cyan-400 bg-cyan-500/10 px-6 py-2 rounded-xl w-full text-center">--</div>
+        
+        <!-- Native Foolproof Slider -->
+        <input type="range" id="gameplaySlider" class="w-full mt-6 h-4 bg-slate-800 rounded-lg appearance-none accent-cyan-400">
+        <div class="flex justify-between w-full mt-2 text-[10px] font-mono text-slate-500 font-bold uppercase">
+          <span>Start Limit</span>
+          <span>End Limit</span>
+        </div>
       </div>
       
-      <!-- Lock Button stays anchored at bottom -->
-      <button id="lockPartyBtn" class="absolute bottom-4 left-0 right-0 w-full py-4 bg-cyan-500 text-slate-950 font-black uppercase tracking-wider text-xs rounded-xl hidden transition-all glow-cyan active:scale-95 z-30">Lock Guess</button>
+      <button id="lockPartyBtn" class="w-full py-4 bg-cyan-500 text-slate-950 font-black uppercase tracking-wider text-xs rounded-xl hidden transition-all glow-cyan active:scale-95 shrink-0">Lock Guess</button>
     </div>
-
   </main>
 
   <script src="party.js"></script>
