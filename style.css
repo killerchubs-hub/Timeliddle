@@ -2,9 +2,6 @@
 
 :root {
   --bg-color: #07090e;
-  --panel-bg: rgba(15, 21, 35, 0.9);
-  --accent-amber: #f59e0b;
-  --accent-cyan: #22d3ee;
 }
 
 body {
@@ -13,7 +10,7 @@ body {
   color: #f1f5f9;
   margin: 0;
   overflow-x: hidden;
-  overscroll-behavior-y: none; /* Kills pull-to-refresh on mobile */
+  overscroll-behavior-y: none;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -26,10 +23,7 @@ body {
   content: " ";
   display: block;
   position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
+  top: 0; left: 0; bottom: 0; right: 0;
   background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
               linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
   background-size: 100% 4px, 6px 100%;
@@ -37,30 +31,10 @@ body {
   pointer-events: none;
 }
 
-.game-card, .game-slot {
-  height: 60px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  transition: all 0.2s ease;
-}
-
-.game-card {
-  background: #1e293b;
-  border: 1px solid #334155;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  cursor: grab;
-  touch-action: none; /* Prevents native touch actions from interrupting SortableJS */
-}
-
-.game-card:active {
-  cursor: grabbing;
-  transform: scale(0.98);
-}
-
 .glow-amber { box-shadow: 0 0 15px rgba(245, 158, 11, 0.2); }
 .glow-cyan { box-shadow: 0 0 15px rgba(34, 211, 238, 0.2); }
+.glow-active { box-shadow: 0 0 20px rgba(245, 158, 11, 0.6); border-color: #f59e0b !important; background-color: rgba(245, 158, 11, 0.1) !important; transform: scale(0.98); }
+.slot-highlight { background-color: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.5); }
 
 .ad-banner-container {
   width: 100%;
