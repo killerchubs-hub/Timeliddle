@@ -1,10 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
   let peer;
   let connection;
-  let isHost = false;
   let partyData = [];
   let timeBounds = { start: 0, end: 2026 };
+  let currentGuess = 1000;
   
+  // UI Elements
   const hostBtn = document.getElementById('hostBtn');
   const joinBtn = document.getElementById('joinBtn');
   const joinCodeInput = document.getElementById('joinCode');
@@ -13,8 +14,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const roomCodeDisplay = document.getElementById('roomCodeDisplay');
   const activeEventCard = document.getElementById('activeEventCard');
   const lockPartyBtn = document.getElementById('lockPartyBtn');
-  const slider = document.getElementById('partyYearSlider');
-  const sliderDisplay = document.getElementById('yearSliderDisplay');
+  const yearDisplay = document.getElementById('yearSliderDisplay');
+  const touchArea = document.getElementById('touchArea');
+
+  // Lobby Slider Elements
+  const startSlider = document.getElementById('startYear');
+  const endSlider = document.getElementById('endYear');
+  const startDisplay = document.getElementById('startDisplay');
+  const endDisplay = document.getElementById('endDisplay');
 
   const generateCode = () => Math.random().toString(36).substring(2, 6).toUpperCase();
 
@@ -26,38 +33,48 @@ document.addEventListener("DOMContentLoaded", () => {
     return val < 0 ? `${Math.abs(val)} BC` : `${val} AD`;
   }
 
-  slider.addEventListener('input', (e) => {
-    sliderDisplay.innerText = formatYear(e.target.value);
-  });
+  // Update Lobby Sliders
+  startSlider.addEventListener('input', (e) => startDisplay.innerText = formatYear(e.target.value));
+  endSlider.addEventListener('input', (e) => endDisplay.innerText = formatYear(e.target.value));
 
   function setTimeBounds(start, end) {
     timeBounds = { start: parseInt(start), end: parseInt(end) };
-    
     document.getElementById('uiStartYear').innerText = formatYear(timeBounds.start);
     document.getElementById('uiEndYear').innerText = formatYear(timeBounds.end);
-    
-    slider.min = timeBounds.start;
-    slider.max = timeBounds.end;
-    slider.value = Math.floor((timeBounds.start + timeBounds.end) / 2);
-    
-    document.getElementById('sliderMin').innerText = document.getElementById('uiStartYear').innerText;
-    document.getElementById('sliderMax').innerText = document.getElementById('uiEndYear').innerText;
-    
-    sliderDisplay.innerText = formatYear(slider.value);
+    currentGuess = Math.floor((timeBounds.start + timeBounds.end) / 2);
+    yearDisplay.innerText = formatYear(currentGuess);
   }
 
-  hostBtn.addEventListener('click', () => {
-    const startInput = document.getElementById('startYear').value || 0;
-    const endInput = document.getElementById('endYear').value || 2026;
-    setTimeBounds(startInput, endInput);
+  // VERTICAL TOUCH MATH
+  touchArea.addEventListener('touchmove', (e) => {
+    // Only drag if the card is visible
+    if(activeEventCard.classList.contains('hidden')) return;
+    
+    e.preventDefault(); // Stop native scrolling
+    const rect = touchArea.getBoundingClientRect();
+    let touchY = e.touches[0].clientY - rect.top;
+    
+    // Clamp inside container bounds
+    touchY = Math.max(0, Math.min(touchY, rect.height));
+    
+    // Move card visually
+    activeEventCard.style.top = `${touchY}px`;
+    activeEventCard.style.transform = `translateY(-50%)`;
+    
+    // Calculate math (Top = End Year, Bottom = Start Year)
+    let percent = touchY / rect.height;
+    currentGuess = Math.round(timeBounds.end - (percent * (timeBounds.end - timeBounds.start)));
+    
+    yearDisplay.innerText = formatYear(currentGuess);
+  }, { passive: false });
 
+  // HOST LOGIC
+  hostBtn.addEventListener('click', () => {
+    setTimeBounds(startSlider.value, endSlider.value);
     const roomCode = generateCode();
-    isHost = true;
     peer = new Peer(roomCode); 
     
-    peer.on('open', (id) => {
-      startPartyUI(id);
-    });
+    peer.on('open', (id) => startPartyUI(id));
 
     peer.on('connection', (conn) => {
       connection = conn;
@@ -77,6 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // JOIN LOGIC
   joinBtn.addEventListener('click', () => {
     const code = joinCodeInput.value.trim().toUpperCase();
     if (!code) return;
@@ -107,14 +125,15 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('partyEmoji').innerText = eventData.emoji;
     document.getElementById('partyEventName').innerText = eventData.name;
     
-    slider.value = Math.floor((timeBounds.start + timeBounds.end) / 2);
-    sliderDisplay.innerText = formatYear(slider.value);
+    // Reset visual position to center
+    activeEventCard.style.top = '50%';
+    currentGuess = Math.floor((timeBounds.start + timeBounds.end) / 2);
+    yearDisplay.innerText = formatYear(currentGuess);
   }
 
   lockPartyBtn.addEventListener('click', () => {
-    const guess = slider.value;
-    alert(`You locked in: ${formatYear(guess)}`);
-    if (connection) connection.send({ type: 'locked', guess: guess });
+    alert(`You locked in: ${formatYear(currentGuess)}`);
+    if (connection) connection.send({ type: 'locked', guess: currentGuess });
     lockPartyBtn.classList.add('hidden');
     activeEventCard.classList.add('hidden');
     activeEventCard.classList.remove('flex');
