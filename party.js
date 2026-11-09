@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let connection;
   let isHost = false;
   let partyData = [];
+  let timeBounds = { start: 0, end: 2026 };
   
   const hostBtn = document.getElementById('hostBtn');
   const joinBtn = document.getElementById('joinBtn');
@@ -15,24 +16,44 @@ document.addEventListener("DOMContentLoaded", () => {
   const slider = document.getElementById('partyYearSlider');
   const sliderDisplay = document.getElementById('yearSliderDisplay');
 
-  // Generate a random 4-letter room code
   const generateCode = () => Math.random().toString(36).substring(2, 6).toUpperCase();
 
-  // Load Party Data
   fetch('data.json')
     .then(res => res.json())
     .then(data => partyData = data.party);
 
-  // Update slider UI visually
+  function formatYear(val) {
+    return val < 0 ? `${Math.abs(val)} BC` : `${val} AD`;
+  }
+
   slider.addEventListener('input', (e) => {
-    sliderDisplay.innerText = `${e.target.value} AD`;
+    sliderDisplay.innerText = formatYear(e.target.value);
   });
 
-  // HOST LOGIC
+  function setTimeBounds(start, end) {
+    timeBounds = { start: parseInt(start), end: parseInt(end) };
+    
+    document.getElementById('uiStartYear').innerText = formatYear(timeBounds.start);
+    document.getElementById('uiEndYear').innerText = formatYear(timeBounds.end);
+    
+    slider.min = timeBounds.start;
+    slider.max = timeBounds.end;
+    slider.value = Math.floor((timeBounds.start + timeBounds.end) / 2);
+    
+    document.getElementById('sliderMin').innerText = document.getElementById('uiStartYear').innerText;
+    document.getElementById('sliderMax').innerText = document.getElementById('uiEndYear').innerText;
+    
+    sliderDisplay.innerText = formatYear(slider.value);
+  }
+
   hostBtn.addEventListener('click', () => {
+    const startInput = document.getElementById('startYear').value || 0;
+    const endInput = document.getElementById('endYear').value || 2026;
+    setTimeBounds(startInput, endInput);
+
     const roomCode = generateCode();
     isHost = true;
-    peer = new Peer(roomCode); // Set exact ID to room code
+    peer = new Peer(roomCode); 
     
     peer.on('open', (id) => {
       startPartyUI(id);
@@ -40,21 +61,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
     peer.on('connection', (conn) => {
       connection = conn;
-      // Send the first event to the joined player
       conn.on('open', () => {
-        conn.send({ type: 'start', event: partyData[0] });
-        displayActiveEvent(partyData[0]);
+        conn.send({ type: 'setup', bounds: timeBounds });
+        setTimeout(() => {
+          if(partyData.length > 0) {
+            conn.send({ type: 'start', event: partyData[0] });
+            displayActiveEvent(partyData[0]);
+          }
+        }, 500);
       });
       
       conn.on('data', (data) => {
-        if (data.type === 'locked') handleLockedGuess(data.guess);
+        if (data.type === 'locked') alert(`Guest locked in: ${formatYear(data.guess)}`);
       });
     });
   });
 
-  // JOIN LOGIC
   joinBtn.addEventListener('click', () => {
-    const code = joinCodeInput.value.toUpperCase();
+    const code = joinCodeInput.value.trim().toUpperCase();
     if (!code) return;
     
     peer = new Peer();
@@ -63,8 +87,9 @@ document.addEventListener("DOMContentLoaded", () => {
       startPartyUI(code);
 
       connection.on('data', (data) => {
+        if (data.type === 'setup') setTimeBounds(data.bounds.start, data.bounds.end);
         if (data.type === 'start') displayActiveEvent(data.event);
-        if (data.type === 'locked') handleLockedGuess(data.guess);
+        if (data.type === 'locked') alert(`Host locked in: ${formatYear(data.guess)}`);
       });
     });
   });
@@ -77,23 +102,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function displayActiveEvent(eventData) {
     activeEventCard.classList.remove('hidden');
+    activeEventCard.classList.add('flex');
     lockPartyBtn.classList.remove('hidden');
     document.getElementById('partyEmoji').innerText = eventData.emoji;
     document.getElementById('partyEventName').innerText = eventData.name;
+    
+    slider.value = Math.floor((timeBounds.start + timeBounds.end) / 2);
+    sliderDisplay.innerText = formatYear(slider.value);
   }
 
   lockPartyBtn.addEventListener('click', () => {
     const guess = slider.value;
-    handleLockedGuess(guess);
-    if (connection) {
-      connection.send({ type: 'locked', guess: guess });
-    }
-    // Hide controls until next turn
+    alert(`You locked in: ${formatYear(guess)}`);
+    if (connection) connection.send({ type: 'locked', guess: guess });
     lockPartyBtn.classList.add('hidden');
+    activeEventCard.classList.add('hidden');
+    activeEventCard.classList.remove('flex');
   });
-
-  function handleLockedGuess(guess) {
-    // In a full build, this function calculates proximity scoring and plots a dot on the vertical track.
-    alert(`A guess of ${guess} AD was locked in!`);
-  }
 });
