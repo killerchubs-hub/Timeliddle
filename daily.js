@@ -4,8 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let poolItems = [];
   let slotItems = [null, null, null, null, null];
   
-  // Advanced Selection State
-  // Can be null, {type: 'pool', id: 1}, or {type: 'slot', index: 0}
+  // Selection State (for Tap to Move/Swap)
   let selectedSource = null; 
   
   let gameState = 1; // 1: Timeline, 2: Year Lock, 3: Summary
@@ -49,6 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if(!yearLockData) return;
     document.getElementById('yearLockEventText').innerText = `"${yearLockData.name}"`;
     
+    // Dynamic slider range based on actual year
     let min = Math.floor((yearLockData.year - 150) / 10) * 10;
     let max = Math.ceil((yearLockData.year + 150) / 10) * 10;
     if (yearLockData.year < 0) { min = yearLockData.year - 500; max = yearLockData.year + 500; }
@@ -112,7 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
       
       if (item) {
         if (gameState > 1) {
-          // Relative Scoring Paint
+          // Relative Scoring Paint (Checks if item breaks chronological sequence)
           let isCorrect = true;
           for (let i = 0; i < index; i++) if (slotItems[i].year > item.year) isCorrect = false;
           for (let i = index + 1; i < slotItems.length; i++) if (slotItems[i].year < item.year) isCorrect = false;
@@ -122,6 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }`;
           slot.innerHTML = `<div class="flex items-center truncate"><span class="text-base mr-2">${item.emoji}</span><span class="text-xs font-bold truncate">${item.name}</span></div><span class="ml-2 mono text-[10px] opacity-70 shrink-0">${formatYear(item.year)}</span>`;
         } else {
+          // Unlocked Slot State
           const isSelected = selectedSource && selectedSource.type === 'slot' && selectedSource.index === index;
           slot.className = `w-full h-14 border rounded-xl flex items-center px-4 cursor-pointer shadow-sm transition-all ${
             isSelected ? 'glow-active text-amber-400' : 'bg-[#1e293b] border-slate-500 text-slate-200'
@@ -155,6 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
           });
         }
       } else {
+        // Empty Slot State
         const isHighlight = selectedSource !== null;
         slot.className = `w-full h-14 border-2 border-dashed rounded-xl flex items-center px-4 cursor-pointer transition-all ${
           isHighlight ? 'slot-highlight' : 'border-slate-800 bg-slate-900/50'
@@ -201,9 +203,10 @@ document.addEventListener("DOMContentLoaded", () => {
           if (isCorrect) timelineScore += 200;
         });
 
-        renderBoard(); // Lock board
+        renderBoard(); 
         gameState = 2;
-        actionBtn.innerText = "Proceed to Year Lock 🎯";
+        
+        actionBtn.innerText = `R1 Score: ${timelineScore}/1000 ➔ Play Year Lock 🎯`;
         actionBtn.className = "w-full py-4 mt-6 bg-cyan-500 text-slate-950 font-black uppercase tracking-wider text-xs rounded-xl shadow-lg glow-cyan active:scale-95 transition-all";
       } 
       
@@ -223,15 +226,15 @@ document.addEventListener("DOMContentLoaded", () => {
         const actualYear = yearLockData.year;
         const diff = Math.abs(guessedYear - actualYear);
         
-        // Year Lock Score: Max 500. Lose 5 points per year off.
-        let yearScore = Math.max(0, 500 - (diff * 5));
-        let totalScore = timelineScore + yearScore; // Max 1500
+        // NEW YEAR LOCK SCORING: Start at 1000, lose 3.5 per year missed, round to nearest whole number, min 0.
+        let yearScore = Math.max(0, Math.round(1000 - (diff * 3.5)));
+        let totalScore = timelineScore + yearScore; // Max 2000
         
-        // Dynamic Title
+        // Dynamic Title (Updated for 2000 max)
         let title = "Oof! 💀";
-        if (totalScore === 1500) title = "Legendary! 🏆";
-        else if (totalScore >= 1100) title = "Great Job! 🌟";
-        else if (totalScore >= 600) title = "Not Bad! 👍";
+        if (totalScore === 2000) title = "Legendary! 🏆";
+        else if (totalScore >= 1500) title = "Great Job! 🌟";
+        else if (totalScore >= 1000) title = "Not Bad! 👍";
         document.getElementById('summaryTitle').innerText = title;
         
         document.getElementById('game2Container').classList.add('hidden');
@@ -241,11 +244,11 @@ document.addEventListener("DOMContentLoaded", () => {
         
         document.getElementById('finalTimelineScore').innerText = `${timelineScore} / 1,000`;
         document.getElementById('finalYearResult').innerText = `Guessed: ${formatYear(guessedYear)} | Actual: ${formatYear(actualYear)} (+${yearScore} pts)`;
-        document.getElementById('finalTotalScore').innerText = `${totalScore} / 1,500`;
+        document.getElementById('finalTotalScore').innerText = `${totalScore} / 2,000`; // Updated max text
         
         actionBtn.classList.add('hidden'); 
         
-        if (totalScore >= 1100) {
+        if (totalScore >= 1500) {
           let streak = parseInt(localStorage.getItem('timeline_streak') || 0);
           localStorage.setItem('timeline_streak', streak + 1);
           document.getElementById('streakCount').innerText = streak + 1;
@@ -257,10 +260,11 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById('copyBtn').addEventListener('click', () => {
     const guessedYear = parseInt(yearSlider.value);
     const diff = Math.abs(guessedYear - yearLockData.year);
-    const yearScore = Math.max(0, 500 - (diff * 5));
+    const yearScore = Math.max(0, Math.round(1000 - (diff * 3.5)));
     const totalScore = timelineScore + yearScore;
     
-    const text = `TimeLine Daily #${currentDay} ⏳\n📅 Timeline: ${timelineScore}/1000\n🎯 Precision: ${diff} yrs off\n🏆 Total: ${totalScore}/1500`;
+    // Updated copy text to reflect the new 2000 max
+    const text = `TimeLine Daily #${currentDay} ⏳\n📅 Timeline: ${timelineScore}/1000\n🎯 Precision: ${diff} yrs off\n🏆 Total: ${totalScore}/2000`;
     navigator.clipboard.writeText(text);
     alert('Score copied to clipboard!');
   });
